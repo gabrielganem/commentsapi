@@ -6,48 +6,48 @@ use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+define("MAX_SUBCOMMENT_LEVEL", 3);
+
 
 class CommentController extends Controller
 {
+
+
     public function index()
     {
-        $allComments = DB::table('comments')->select('id', 'name', 'message', 'parent_id')->get();
+        $allComments = DB::table('comments')->select('id', 'name', 'message', 'parent_id')->get(); //getting all the records from the database;
        
         foreach ($allComments as $c)
         {
-            $c->comments = [];   
+            $c->comments = [];  //Creating the subComments array inside each one of the comments 
         }
 
-        foreach ($allComments as $ckey => $comment)
+        $level = 0; //the initial level of subcomments for checking up subcomments
+
+        foreach ($allComments as $ckey => $comment) //loop for check all of the subcomments
         {
-            foreach ($allComments as $n1key => $n1comment)
-            {
-                if ($n1comment->parent_id !== null && $n1comment->parent_id == $comment->id)
-                {
-                    foreach ($allComments as $n2key => $n2comment)
-                    {
-                        if ($n2comment->parent_id !== null && $n2comment->parent_id == $n1comment->id)
-                        {
-                            foreach ($allComments as $n3key => $n3comment)
-                            {
-                                if ($n3comment->parent_id !== null && $n3comment->parent_id == $n2comment->id)
-                                {
-                                    array_push($n2comment->comments, $n3comment);
-                                    unset($allComments[$n3key]);
-                                }                               
-                            }
-                            array_push($n1comment->comments, $n2comment);
-                            unset($allComments[$n2key]);
-                        }                       
-                    }
-                    array_push($comment->comments, $n1comment);
-                    unset($allComments[$n1key]);
-                }
-            }
+            $this->checksSubComments($allComments, $comment, $level); // call to a recursive function
         }
 
         return $allComments;
     }
+
+    public function checksSubComments($allComments, $parentComment, $level)
+    {
+        if ($level > MAX_SUBCOMMENT_LEVEL) return; // if the function touchs the last level, time to stop
+        foreach ($allComments as $ckey => $comment)
+        {
+             if ($comment->parent_id !== null && $comment->parent_id == $parentComment->id) //loop through all elements to see if it's a match parent
+            {
+                $this->checksSubComments($allComments, $comment, $level+1);
+                array_push($parentComment->comments, $comment); //puts it in the parent's subcomments array
+                unset($allComments[$ckey]); //remove it from the main array
+            }  
+        }
+
+        return;
+    }
+
 
     public function store(Request $request)
     {
