@@ -45,8 +45,20 @@ class CommentController extends Controller
         return redirect()->route('index');
     }
 
-    public function reply()
+    public function reply(Request $request, $id)
     {
+        $parent_comment = DB::table('comments')->where('id', $id)->first();
 
+        if (isset($parent_comment)) {
+            $comment = new Comment([
+                'name' => $request->input("name"),
+                'message' => $request->input("message"),
+                'parent_id' => $parent_comment->id,
+            ]);
+    
+            $comment->save();
+        }
+
+        return "OK";
     }
 }
