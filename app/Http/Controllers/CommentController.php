@@ -26,17 +26,27 @@ class CommentController extends Controller
         $comment->save();
 
         return redirect()->route('index');
-
     }
 
-    public function reply(Request $request, $id)
+    public function update(Request $request, $id)
+    {
+
+        $comment = DB::table('comments')->where('id', $id);
+
+        if (isset($comment)) {
+            if (($request->input("name")) != null && $request->input("message") != null) {
+                $comment->update([
+                'name' => $request->input("name"),
+                'message' => $request->input("message"),
+            ]);
+        }
+    }
+        
+        return redirect()->route('index');
+    }
+
+    public function reply()
     {
 
     }
-
-    public function update(Request $request)
-    {
-
-    }
-
 }
