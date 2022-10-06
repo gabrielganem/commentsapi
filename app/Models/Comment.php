@@ -13,10 +13,7 @@ class Comment extends Model
         'name',
         'message',
         'parent_id',
+        'comments' => [],
     ];
 
-    public function subComments()
-    {
-        return $this->hasMany(Comment::class, 'parent_id');
-    }
 }
