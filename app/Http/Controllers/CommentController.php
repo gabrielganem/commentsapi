@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-Use Exception;
+use Illuminate\Support\Facades\Validator;
 
 define("MAX_SUBCOMMENT_LEVEL", 3);
 
@@ -62,6 +62,16 @@ class CommentController extends Controller
 
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'message' => 'required',
+        ]);
+ 
+        if ($validator->fails()) {
+            return response("Missing arguments", 400);
+        }
+ 
+
         $comment = DB::table('comments')->insert([
             'name' => $request->input("name"),
             'message' => $request->input("message"),
@@ -72,6 +82,14 @@ class CommentController extends Controller
 
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'message' => 'required',
+        ]);
+ 
+        if ($validator->fails()) {
+            return response("Missing arguments", 400);
+        }
 
         $comment = DB::table('comments')->where('id', $id)->limit(1);
 
@@ -90,6 +108,15 @@ class CommentController extends Controller
 
     public function reply(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'message' => 'required',
+        ]);
+ 
+        if ($validator->fails()) {
+            return response("Missing arguments", 400);
+        }
+        
         $parent_comment = DB::table('comments')->where('id', $id)->first();
 
         if (isset($parent_comment)) {
