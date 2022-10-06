@@ -35,6 +35,7 @@ class CommentController extends Controller
     public function checksSubComments($allComments, $parentComment, $level)
     {
         if ($level > MAX_SUBCOMMENT_LEVEL) return; // if the function touchs the last level, time to stop
+
         foreach ($allComments as $ckey => $comment)
         {
              if ($comment->parent_id !== null && $comment->parent_id == $parentComment->id) //loop through all elements to see if it's a match parent
@@ -56,7 +57,7 @@ class CommentController extends Controller
             'message' => $request->input("message"),
         ]);
 
-        return redirect()->route('index');
+        return $this->index();
     }
 
     public function update(Request $request, $id)
@@ -73,7 +74,7 @@ class CommentController extends Controller
         }
     }
         
-        return redirect()->route('index');
+        return $this->index();
     }
 
     public function reply(Request $request, $id)
@@ -87,7 +88,8 @@ class CommentController extends Controller
                 'parent_id' => $id,
             ]);
         }
-        return "OK";
+
+        return $this->index();
 
     }
 }
