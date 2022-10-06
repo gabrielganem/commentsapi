@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+Use Exception;
 
 define("MAX_SUBCOMMENT_LEVEL", 3);
 
@@ -22,31 +23,40 @@ class CommentController extends Controller
             $c->comments = [];  //Creating the subComments array inside each one of the comments 
         }
 
-        $level = 0; //the initial level of subcomments for checking up subcomments
+        $map = [];
+        $firstLevel = 1; //the initial level of subcomments for checking up subcomments
 
         foreach ($allComments as $ckey => $comment) //loop for check all of the subcomments
         {
-            $this->checksSubComments($allComments, $comment, $level); // call to a recursive function
+            if (!in_array($ckey, $map))
+            {  
+                $this->checksSubComments($allComments, $comment, $firstLevel, $map); // call to a recursive function
+            }
         }
 
         return $allComments;
+
+
     }
 
-    public function checksSubComments($allComments, $parentComment, $level)
+    public function checksSubComments(&$allComments, &$parentComment, int $level, &$map)
     {
-        if ($level > MAX_SUBCOMMENT_LEVEL) return; // if the function touchs the last level, time to stop
+        if ($level >= MAX_SUBCOMMENT_LEVEL) {
+            return;
+        }; // if the function touchs the last level, time to stop
 
         foreach ($allComments as $ckey => $comment)
         {
              if ($comment->parent_id !== null && $comment->parent_id == $parentComment->id) //loop through all elements to see if it's a match parent
             {
-                $this->checksSubComments($allComments, $comment, $level+1);
+                $this->checksSubComments($allComments, $comment, $level+1, $map);
                 array_push($parentComment->comments, $comment); //puts it in the parent's subcomments array
                 unset($allComments[$ckey]); //remove it from the main array
+                array_push($map, $ckey); //adds to a hash map to avoid uneccessary loop
+                return $allComments;
             }  
         }
 
-        return;
     }
 
 
@@ -63,7 +73,7 @@ class CommentController extends Controller
     public function update(Request $request, $id)
     {
 
-        $comment = DB::table('comments')->where('id', $id);
+        $comment = DB::table('comments')->where('id', $id)->limit(1);
 
         if (isset($comment)) {
             if (($request->input("name")) != null && $request->input("message") != null) {
@@ -73,6 +83,7 @@ class CommentController extends Controller
             ]);
         }
     }
+    else return response("Comment not found", 400);
         
         return $this->index();
     }
@@ -88,8 +99,18 @@ class CommentController extends Controller
                 'parent_id' => $id,
             ]);
         }
+        else return response("Comment not found", 400);
 
         return $this->index();
 
+    }
+
+    public function delete($id)
+    {
+        $deleted = DB::table('comments')->where('id', $id)->first();
+        if (isset($deleted))
+            DB::table('comments')->where('id', $id)->delete();
+        else return response("Comment not found", 400);
+        return $this->index();
     }
 }

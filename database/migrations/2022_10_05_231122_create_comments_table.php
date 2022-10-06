@@ -19,7 +19,12 @@ return new class extends Migration
             $table->string("name");
             $table->string("message");
             $table->unsignedBigInteger("parent_id")->nullable();
+            $table->foreign('parent_id')
+            ->references('id')->on('comments')
+            ->onUpdate('cascade')
+            ->onDelete('cascade');;
         });
+        
     }
 
     /**

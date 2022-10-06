@@ -22,5 +22,6 @@ Route::controller(CommentController::class)->group(function () {
         Route::post('/', 'store');
         Route::patch('/{id}', 'update');
         Route::post('/{id}/reply', 'reply');
+        Route::delete('/{id}', 'delete');
     });
 });
